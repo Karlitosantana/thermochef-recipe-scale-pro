@@ -1,8 +1,11 @@
 import Stripe from 'stripe';
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-05-28.basil',
-});
+// Only initialize Stripe if the secret key is available
+export const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-05-28.basil',
+    })
+  : null as any;
 
 export const PRICE_IDS = {
   PRO_YEARLY: process.env.STRIPE_PRO_YEARLY_PRICE_ID!,
@@ -10,6 +13,7 @@ export const PRICE_IDS = {
 };
 
 export const getStripeCustomerByEmail = async (email: string) => {
+  if (!stripe) throw new Error('Stripe not initialized');
   const customers = await stripe.customers.list({
     email,
     limit: 1,
@@ -18,6 +22,7 @@ export const getStripeCustomerByEmail = async (email: string) => {
 };
 
 export const createStripeCustomer = async (email: string, name?: string) => {
+  if (!stripe) throw new Error('Stripe not initialized');
   return await stripe.customers.create({
     email,
     name,
@@ -42,6 +47,7 @@ export const createCheckoutSession = async ({
   userId: string;
   trialDays?: number;
 }) => {
+  if (!stripe) throw new Error('Stripe not initialized');
   return await stripe.checkout.sessions.create({
     customer: customerId,
     mode: 'subscription',
@@ -73,6 +79,7 @@ export const createBillingPortalSession = async ({
   customerId: string;
   returnUrl: string;
 }) => {
+  if (!stripe) throw new Error('Stripe not initialized');
   return await stripe.billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,
@@ -80,12 +87,14 @@ export const createBillingPortalSession = async ({
 };
 
 export const cancelSubscription = async (subscriptionId: string) => {
+  if (!stripe) throw new Error('Stripe not initialized');
   return await stripe.subscriptions.update(subscriptionId, {
     cancel_at_period_end: true,
   });
 };
 
 export const reactivateSubscription = async (subscriptionId: string) => {
+  if (!stripe) throw new Error('Stripe not initialized');
   return await stripe.subscriptions.update(subscriptionId, {
     cancel_at_period_end: false,
   });

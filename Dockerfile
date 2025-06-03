@@ -18,6 +18,11 @@ COPY . .
 RUN npx prisma generate
 
 # Build the application
+# Set dummy values for build only - Railway will override these at runtime
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=""
+ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=""
+ENV NEXT_PUBLIC_APP_URL=""
+
 RUN npm run build
 
 # Expose port

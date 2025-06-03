@@ -59,19 +59,26 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
-      <html lang="en" className={inter.variable}>
-        <body
-          className="font-sans antialiased"
-        >
-          <ErrorBoundary>
-            <I18nProvider>
-              {children}
-            </I18nProvider>
-          </ErrorBoundary>
-        </body>
-      </html>
-    </ClerkProvider>
+  // Only use ClerkProvider if the key is available
+  const content = (
+    <html lang="en" className={inter.variable}>
+      <body className="font-sans antialiased">
+        <ErrorBoundary>
+          <I18nProvider>
+            {children}
+          </I18nProvider>
+        </ErrorBoundary>
+      </body>
+    </html>
   );
+
+  if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    return (
+      <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+        {content}
+      </ClerkProvider>
+    );
+  }
+
+  return content;
 }

@@ -1,0 +1,322 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum SubscriptionTier {
+  FREE
+  PRO
+  FAMILY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  PAST_DUE
+  INCOMPLETE
+  TRIALING
+}
+
+enum RecipeStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ThermomixModel {
+  TM5
+  TM6
+  TM7
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum SupportTicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model User {
+  id                String             @id @default(uuid())
+  clerkId           String             @unique
+  email             String             @unique
+  name              String?
+  role              UserRole           @default(USER)
+  language          String             @default("en")
+  preferredUnits    String             @default("metric")
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  subscription      Subscription?
+  recipes           Recipe[]
+  conversions       Conversion[]
+  collections       Collection[]
+  familyOwner       Family?            @relation("FamilyOwner")
+  familyMember      FamilyMember?
+  usageStats        UsageStat[]
+  mealPlans         MealPlan[]
+  shoppingLists     ShoppingList[]
+  supportTickets    SupportTicket[]
+
+  // Profile fields
+  bio               String?
+  location          String?
+  website           String?
+  cookingLevel      String?
+  favoriteDevices   String[]           @default([])
+  cookingGoals      String[]           @default([])
+  allergens         String[]           @default([])
+  settings          Json?
+}
+
+model Subscription {
+  id                String             @id @default(uuid())
+  userId            String             @unique
+  user              User               @relation(fields: [userId], references: [id])
+  tier              SubscriptionTier   @default(FREE)
+  status            SubscriptionStatus @default(TRIALING)
+  stripeCustomerId  String?            @unique
+  stripeSubscriptionId String?         @unique
+  trialEndsAt       DateTime?
+  currentPeriodEnd  DateTime?
+  cancelledAt       DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model Recipe {
+  id                String             @id @default(uuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id])
+  title             String
+  description       String?
+  sourceUrl         String?
+  sourceAttribution String?
+  cuisine           String?
+  diet              String[]
+  prepTime          Int?               // in minutes
+  cookTime          Int?               // in minutes
+  totalTime         Int?               // in minutes
+  servings          Int                @default(4)
+  difficulty        String?
+  imageUrl          String?
+  status            RecipeStatus       @default(DRAFT)
+  language          String             @default("en")
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  ingredients       Ingredient[]
+  conversions       Conversion[]
+  nutritionInfo     NutritionInfo?
+  collectionItems   CollectionItem[]
+  ratings           Rating[]
+  mealPlans         MealPlan[]
+  shoppingListItems ShoppingListItem[]
+}
+
+model Ingredient {
+  id                String             @id @default(uuid())
+  recipeId          String
+  recipe            Recipe             @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  name              String
+  amount            Float
+  unit              String
+  notes             String?
+  order             Int
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model Conversion {
+  id                String             @id @default(uuid())
+  recipeId          String
+  recipe            Recipe             @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User               @relation(fields: [userId], references: [id])
+  deviceModel       ThermomixModel
+  steps             Json               // Array of conversion steps
+  notes             String?
+  isPublic          Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model NutritionInfo {
+  id                String             @id @default(uuid())
+  recipeId          String             @unique
+  recipe            Recipe             @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  calories          Float?
+  protein           Float?
+  carbohydrates     Float?
+  fat               Float?
+  fiber             Float?
+  sugar             Float?
+  sodium            Float?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model Collection {
+  id                String             @id @default(uuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id])
+  name              String
+  description       String?
+  isPublic          Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  items             CollectionItem[]
+}
+
+model CollectionItem {
+  id                String             @id @default(uuid())
+  collectionId      String
+  collection        Collection         @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  recipeId          String
+  recipe            Recipe             @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  order             Int
+  createdAt         DateTime           @default(now())
+  
+  @@unique([collectionId, recipeId])
+}
+
+model Family {
+  id                String             @id @default(uuid())
+  ownerId           String             @unique
+  owner             User               @relation("FamilyOwner", fields: [ownerId], references: [id])
+  name              String
+  maxMembers        Int                @default(5)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  members           FamilyMember[]
+}
+
+model FamilyMember {
+  id                String             @id @default(uuid())
+  familyId          String
+  family            Family             @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  userId            String             @unique
+  user              User               @relation(fields: [userId], references: [id])
+  role              String             @default("MEMBER")
+  joinedAt          DateTime           @default(now())
+  
+  @@unique([familyId, userId])
+}
+
+model Rating {
+  id                String             @id @default(uuid())
+  recipeId          String
+  recipe            Recipe             @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  userId            String
+  rating            Int                // 1-5
+  comment           String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  @@unique([recipeId, userId])
+}
+
+model UsageStat {
+  id                String             @id @default(uuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id])
+  date              DateTime           @default(now()) @db.Date
+  conversions       Int                @default(0)
+  recipesCreated    Int                @default(0)
+  imagesGenerated   Int                @default(0)
+  
+  @@unique([userId, date])
+  @@index([date])
+}
+
+model MealPlan {
+  id                String             @id @default(uuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id])
+  date              DateTime           @db.Date
+  mealType          MealType
+  recipeId          String?
+  recipe            Recipe?            @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  customMeal        String?
+  notes             String?
+  servings          Int                @default(4)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  @@unique([userId, date, mealType])
+  @@index([userId, date])
+}
+
+model ShoppingList {
+  id                String             @id @default(uuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id])
+  name              String             @default("Shopping List")
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  items             ShoppingListItem[]
+}
+
+model ShoppingListItem {
+  id                String             @id @default(uuid())
+  shoppingListId    String
+  shoppingList      ShoppingList       @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
+  name              String
+  amount            Float?
+  unit              String?
+  category          String             @default("Other")
+  isChecked         Boolean            @default(false)
+  recipeId          String?
+  recipe            Recipe?            @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  order             Int                @default(0)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  
+  @@index([shoppingListId, category])
+}
+
+model SupportTicket {
+  id                String                  @id @default(uuid())
+  userId            String
+  user              User                    @relation(fields: [userId], references: [id])
+  subject           String
+  message           String
+  priority          SupportTicketPriority   @default(NORMAL)
+  status            SupportTicketStatus     @default(OPEN)
+  assignedTo        String?
+  resolution        String?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  resolvedAt        DateTime?
+
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+}

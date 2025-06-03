@@ -1,0 +1,66 @@
+{
+  "welcome": "Welcome back!",
+  "dashboard": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "convert": "Convert",
+      "recipes": "Recipes",
+      "collections": "Collections",
+      "mealPlanning": "Meal Planning",
+      "analytics": "Analytics",
+      "subscription": "Subscription",
+      "settings": "Settings",
+      "profile": "Profile",
+      "help": "Help"
+    }
+  },
+  "mealPlanning": {
+    "title": "Meal Planning",
+    "subtitle": "Plan your weekly meals and generate shopping lists",
+    "generateList": "Generate Shopping List",
+    "generateListDesc": "Create list from your meal plan",
+    "suggest": "Suggest Meals",
+    "suggestDesc": "Get AI recipe suggestions",
+    "nutrition": "Nutrition Analysis",
+    "nutritionDesc": "View nutritional breakdown",
+    "mealTime": "Meal Time",
+    "breakfast": "Breakfast",
+    "lunch": "Lunch", 
+    "dinner": "Dinner",
+    "snack": "Snack",
+    "totalMeals": "Total Meals",
+    "recipesUsed": "Recipes Used",
+    "prepTime": "Prep Time",
+    "cookTime": "Cook Time"
+  },
+  "pricing": {
+    "free": "Free",
+    "pro": "Pro",
+    "family": "Family",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "getStarted": "Get Started",
+    "upgrade": "Upgrade",
+    "features": {
+      "conversions": "recipe conversions/month",
+      "unlimited": "Unlimited conversions",
+      "storage": "Recipe storage",
+      "support": "Email support",
+      "export": "Export capabilities",
+      "family": "Family accounts",
+      "sharing": "Recipe sharing",
+      "priority": "Priority support"
+    }
+  },
+  "hero": {
+    "title": "Convert Any Recipe for Your Thermomix",
+    "subtitle": "Transform any recipe into perfect Thermomix instructions. Compatible with TM5, TM6, and TM7 devices.",
+    "cta": "Start Converting",
+    "features": {
+      "ai": "AI-Powered Conversion",
+      "devices": "All TM Models",
+      "languages": "7 Languages",
+      "export": "Export & Share"
+    }
+  }
+}

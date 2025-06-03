@@ -17,10 +17,13 @@ COPY . .
 # Generate Prisma client
 RUN npx prisma generate
 
-# Copy environment file for build
-COPY .env.production .env.production
+# Build the application with dummy env vars
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_dummy
+ENV CLERK_SECRET_KEY=sk_test_dummy
+ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_dummy
+ENV STRIPE_SECRET_KEY=sk_test_dummy
+ENV NEXT_PUBLIC_APP_URL=https://thermochef.up.railway.app
 
-# Build the application
 RUN npm run build
 
 # Expose port
